@@ -2,8 +2,11 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
+  <!-- 手機可讀性＆縮放行為 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>聽力健康心理測驗</title>
   <style>
+    html { -webkit-text-size-adjust: 100%; }
     body {
       font-family: "Microsoft JhengHei", sans-serif;
       background: linear-gradient(135deg, #ffcce6, #ccf2ff, #e6ffcc, #ffcccc);
@@ -14,6 +17,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      font-size: 18px; /* 基本字體大小（桌機） */
+      position: relative;
     }
     .container {
       background: rgba(255, 255, 255, 0.9);
@@ -24,6 +29,7 @@
       max-width: 600px;
       margin: 20px auto;
       position: relative;
+      z-index: 1; /* 確保在背景之上 */
     }
     h1, h2, h3 {
       text-align: left;
@@ -31,9 +37,20 @@
       margin-bottom: 12px;
       font-weight: bold;
     }
-    .question {
-      margin: 20px 0;
+    label { display:block; margin-bottom: 6px; }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      font-size: 16px; /* 避免 iOS 聚焦時放大 */
+      line-height: 1.4;
+      background: #fff;
     }
+
+    .question { margin: 20px 0; }
     .options {
       display: flex;
       flex-wrap: wrap;
@@ -47,45 +64,36 @@
       padding: 10px 15px;
       cursor: pointer;
       transition: all 0.2s;
+      user-select: none;
     }
-    .option:hover {
-      background: #6bcb77;
-      color: #fff;
-    }
-    .option.selected {
-      background: #6bcb77;
-      color: #fff;
-    }
-    .slider-container {
+    .option:hover { background: #6bcb77; color: #fff; }
+    .option.selected { background: #6bcb77; color: #fff; }
+
+    .select-container { width: 100%; margin: 20px 0; }
+    .select-input {
       width: 100%;
-      margin: 20px 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 16px; /* 手機友善 */
+      background: #fff;
     }
-    .slider {
-      width: 100%;
-    }
-    .slider-value {
-      text-align: center;
-      font-size: 18px;
-      margin: 10px 0;
-    }
+
     .btn {
       background: #b39ddb;
       color: #fff;
       border: none;
       border-radius: 10px;
-      padding: 10px 20px;
+      padding: 12px 20px;
       font-size: 16px;
       cursor: pointer;
       margin: 10px 5px;
       transition: all 0.2s;
+      touch-action: manipulation;
     }
-    .btn:hover {
-      background: #9575cd;
-    }
-    .btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
+    .btn:hover { background: #9575cd; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
+
     .result-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -100,102 +108,44 @@
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
       text-align: left;
     }
-    .result-img {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      margin-bottom: 0;
-      min-height: 150px;
-    }
-    .result-img img {
-      width: 150px;
-      height: 150px;
-      display: block;
-      margin: 0 auto;
-    }
-    .result-img-label {
-      font-weight: bold;
-      font-size: 20px;
-      margin-top: 12px;
-      text-align: center;
-      letter-spacing: 1px;
-    }
-    .result-footer {
-      width: 100%;
-      background: #f6f6f6;
-      border-radius: 15px;
-      padding: 15px;
-      margin-top: 20px;
-      text-align: left;
-      position: relative;
-      box-sizing: border-box;
-    }
-    .result-footer-hr {
-      width: 100%;
-      margin: 30px 0 10px 0;
-      border: 0;
-      border-top: 2px solid #eee;
-      box-sizing: border-box;
-    }
-    .result-section-title {
-      display: flex;
-      align-items: center;
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-    .result-section-title span.emoji {
-      margin-left: 6px;
-      font-size: 20px;
-    }
-    ul.bullet-list {
-      list-style-type: circle;
-      padding-left: 20px;
-      margin: 0 0 8px 0;
-      text-align: left;
-    }
+    .result-img { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; margin-bottom:0; min-height:150px; }
+    .result-img img { width: 150px; height:150px; display:block; margin:0 auto; }
+    .result-img-label { font-weight:bold; font-size:20px; margin-top:12px; text-align:center; letter-spacing:1px; }
+
+    .result-footer { width:100%; background:#f6f6f6; border-radius:15px; padding:15px; margin-top:20px; text-align:left; position:relative; box-sizing:border-box; }
+    .result-footer-hr { width:100%; margin:30px 0 10px 0; border:0; border-top:2px solid #eee; box-sizing:border-box; }
+    .result-section-title { display:flex; align-items:center; font-size:20px; font-weight:bold; margin-bottom:8px; }
+    .result-section-title span.emoji { margin-left:6px; font-size:20px; }
+    ul.bullet-list { list-style-type: circle; padding-left: 20px; margin: 0 0 8px 0; text-align:left; }
+
     @media (max-width: 500px) {
-      .container {
-        width: 95%;
-        padding: 15px;
-      }
-      .result-img img {
-        width: 110px;
-        height: 110px;
-      }
-      .result-img {
-        min-height: 110px;
-      }
-      .result-img-label {
-        font-size: 16px;
-      }
+      body { font-size: 16px; }
+      h1, h2, h3 { font-size: 20px; }
+      .container { width: 95%; padding: 16px; }
+      .result-img img { width: 110px; height: 110px; }
+      .result-img { min-height: 110px; }
+      .result-img-label { font-size: 16px; }
+      .result-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
     }
+
     .cave-bg {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
+      top: 0; left: 0; width: 100%; height: 100%;
       opacity: 0.3;
       background: radial-gradient(circle, #ffcce6, #ccf2ff, #e6ffcc, #ffcccc);
       background-size: cover;
       background-position: center;
       transition: background-image 0.5s;
+      z-index: 0; /* 背景層 */
+      pointer-events: none; /* 永遠不攔截點擊，避免覆蓋輸入框 */
     }
-    .cave-bg.start {
-      background-image: url("img/start_bg.jpg");
-    }
-    .cave-bg.tinnitus {
-      background-image: url("img/tinnitus_bg.jpg");
-    }
-    .cave-bg.sleep {
-      background-image: url("img/sleep_bg.jpg");
-    }
-    .cave-bg.dizzy {
-      background-image: url("img/dizzy_bg.jpg");
-    }
+    .cave-bg.start { background-image: url("img/start_bg.jpg"); }
+    .cave-bg.tinnitus { background-image: url("img/tinnitus_bg.jpg"); }
+    .cave-bg.sleep { background-image: url("img/sleep_bg.jpg"); }
+    .cave-bg.dizzy { background-image: url("img/dizzy_bg.jpg"); }
+
+    /* iPhone 避免輸入時放大 */
+    input[type="text"], input[type="number"], select, button, textarea { font-size: 16px; }
   </style>
 </head>
 <body>
@@ -203,6 +153,7 @@
   <div class="container">
     <div id="content"><!-- 內容會動態載入 --></div>
   </div>
+
   <script>
     // 題目資料
     const questions = [
@@ -260,7 +211,7 @@
         ],
       },
       {
-        // 5: 睡眠2
+        // 5: 睡眠2（將原本的 slider 改成 select 下拉）
         type: "slider",
         id: "sleep2",
         title: "每天平均睡幾個小時？",
@@ -301,10 +252,8 @@
       const bg = document.querySelector(".cave-bg");
       bg.className = "cave-bg"; // 先移除
       if (currentStep === 0) bg.classList.add("start");
-      else if (currentStep >= 1 && currentStep <= 3)
-        bg.classList.add("tinnitus");
-      else if (currentStep >= 4 && currentStep <= 5)
-        bg.classList.add("sleep");
+      else if (currentStep >= 1 && currentStep <= 3) bg.classList.add("tinnitus");
+      else if (currentStep >= 4 && currentStep <= 5) bg.classList.add("sleep");
       else if (currentStep === 6) bg.classList.add("dizzy");
     }
 
@@ -319,16 +268,19 @@
         content.innerHTML = `
           <h2 style="text-align:center;">${q.title}</h2>
           <div class="question">
-            ${q.inputs
-              .map(
-                (input) => `
+            ${q.inputs.map((input) => `
               <div style="margin: 15px 0;">
-                <label style="display:block; margin-bottom:5px;">${input.label}</label>
-                <input type="${input.type}" id="${input.id}" style="width:100%; padding:8px; border-radius:8px; border:1px solid #ccc;" required>
+                <label for="start_${input.id}">${input.label}</label>
+                <input 
+                  id="start_${input.id}"
+                  type="${input.type}"
+                  class="form-input"
+                  ${input.required ? 'required' : ''}
+                  ${input.id === 'age' ? 'inputmode="numeric" pattern="\\d*"' : ''}
+                  autocomplete="off"
+                >
               </div>
-            `
-              )
-              .join("")}
+            `).join("")}
           </div>
           <div style="text-align:center; margin-top:20px;">
             <button class="btn" style="background:#b39ddb;" onclick="startQuiz()">開始測驗</button>
@@ -339,33 +291,32 @@
         const q = questions[currentStep];
         let optionsHtml = "";
         if (q.type === "radio") {
-          optionsHtml = q.options
-            .map(
-              (opt) => `
-              <div class="option" onclick="selectOption(${currentStep}, '${opt.value}')" id="opt_${currentStep}_${opt.value}">
-                ${opt.label}
-              </div>
-            `
-            )
-            .join("");
+          optionsHtml = q.options.map((opt) => `
+            <div class="option" onclick="selectOption(${currentStep}, '${opt.value}')" id="opt_${currentStep}_${opt.value}">
+              ${opt.label}
+            </div>
+          `).join("");
         } else if (q.type === "checkbox") {
-          optionsHtml = q.options
-            .map(
-              (opt) => `
-              <div class="option" onclick="toggleCheckbox(${currentStep}, '${opt.value}')" id="opt_${currentStep}_${opt.value}">
-                ${opt.label}
-              </div>
-            `
-            )
-            .join("");
+          optionsHtml = q.options.map((opt) => `
+            <div class="option" onclick="toggleCheckbox(${currentStep}, '${opt.value}')" id="opt_${currentStep}_${opt.value}">
+              ${opt.label}
+            </div>
+          `).join("");
         } else if (q.type === "slider") {
+          // 改成 select 下拉，加入 placeholder 讓使用者必須選擇
           optionsHtml = `
-            <div class="slider-container">
-              <input type="range" class="slider" id="slider_${currentStep}" min="${q.min}" max="${q.max}" value="${q.min}" step="${q.step}" oninput="updateSlider(${currentStep})">
-              <div class="slider-value" id="slider_value_${currentStep}">${q.min} 小時</div>
+            <div class="select-container">
+              <select id="select_${currentStep}" class="select-input" onchange="updateSelect(${currentStep})">
+                <option value="" disabled selected>請選擇</option>
+                ${Array.from({ length: q.max - q.min + 1 }, (_, i) => {
+                  const val = q.min + i;
+                  return `<option value="${val}">${val} 小時</option>`;
+                }).join("")}
+              </select>
             </div>
           `;
         }
+
         content.innerHTML = `
           <h3 style="text-align:left;">${q.title}</h3>
           <div class="options">${optionsHtml}</div>
@@ -374,58 +325,36 @@
             <button class="btn" onclick="nextStep()" id="nextBtn" disabled>下一題</button>
           </div>
         `;
-        // 預設選項
+
+        // 預設選項還原
         if (answers[q.id]) {
           if (q.type === "radio") {
-            const radioOption = document.getElementById(
-              `opt_${currentStep}_${answers[q.id]}`
-            );
-            if (radioOption) {
-              radioOption.classList.add("selected");
-            }
+            const radioOption = document.getElementById(`opt_${currentStep}_${answers[q.id]}`);
+            if (radioOption) radioOption.classList.add("selected");
             document.getElementById("nextBtn").disabled = false;
           } else if (q.type === "checkbox") {
             answers[q.id].forEach((val) => {
-              const checkboxOption = document.getElementById(
-                `opt_${currentStep}_${val}`
-              );
-              if (checkboxOption) {
-                checkboxOption.classList.add("selected");
-              }
+              const checkboxOption = document.getElementById(`opt_${currentStep}_${val}`);
+              if (checkboxOption) checkboxOption.classList.add("selected");
             });
             document.getElementById("nextBtn").disabled = false;
           } else if (q.type === "slider") {
-            const slider = document.getElementById(`slider_${currentStep}`);
-            const sliderValueDisplay = document.getElementById(
-              `slider_value_${currentStep}`
-            );
-            if (slider && sliderValueDisplay) {
-              slider.value = answers[q.id];
-              sliderValueDisplay.textContent = answers[q.id] + " 小時";
-            }
+            const selectEl = document.getElementById(`select_${currentStep}`);
+            if (selectEl) selectEl.value = String(answers[q.id]);
             document.getElementById("nextBtn").disabled = false;
           }
         }
       } else {
         // 結果頁
         const hasTinnitus = answers.tinnitus1 === "yes";
-        const hasSleepProblem =
-          answers.sleep1 && answers.sleep1.some((v) => v !== "none");
-        const hasDizzy =
-          answers.dizzy1 && answers.dizzy1.some((v) => v !== "none");
-        // 年齡與建議睡眠時數
+        const hasSleepProblem = answers.sleep1 && answers.sleep1.some((v) => v !== "none");
+        const hasDizzy = answers.dizzy1 && answers.dizzy1.some((v) => v !== "none");
         const ageNum = parseInt(user.age, 10);
         const sleepNorm = getSleepNorm(ageNum);
         const sleepHours = parseInt(answers.sleep2 || 0, 10);
-        // 睡眠不合格條件（修正為只有睡眠時數不足才算不合格）
         const sleepNotEnough = sleepHours < sleepNorm;
-        // 角色圖索引
-        const imgIndex =
-          (hasTinnitus ? 4 : 0) +
-          (sleepNotEnough || hasSleepProblem ? 2 : 0) +
-          (hasDizzy ? 1 : 0);
-        // 健康夥伴圖
-        let charImg = `<img src="img/monster_${imgIndex}.jpg" alt="健康小夥伴">`;
+        const imgIndex = (hasTinnitus ? 4 : 0) + (sleepNotEnough || hasSleepProblem ? 2 : 0) + (hasDizzy ? 1 : 0);
+        const charImg = `<img src="img/monster_${imgIndex}.jpg" alt="健康小夥伴">`;
 
         // 耳鳴結論
         let tinnitusResult = "";
@@ -434,61 +363,40 @@
             <ul class="bullet-list">
               <li>恭喜您目前並沒有耳鳴的困擾</li>
               <li>建議每年追蹤一次聽力，以確保您的聽力狀況</li>
-              <li>
-                <a href="https://www.greattree.com.tw/stores/a2267fEF473Ecb7C" target="_blank">預約免費聽力檢查</a>
-              </li>
-            </ul>
-          `;
+              <li><a href="https://www.greattree.com.tw/stores/a2267fEF473Ecb7C" target="_blank">預約免費聽力檢查</a></li>
+            </ul>`;
         } else {
           tinnitusResult = `
             <ul class="bullet-list">
               <li>根據<a href="https://wd.vghtpe.gov.tw/ent/Fpage.action?fid=4343" target="_blank">台北榮總耳鼻喉科</a>，耳鳴個案中約有90%有聽力受損，建議至聽力中心詳細檢查</li>
-              ${
-                answers.tinnitus2 === "daily" || answers.tinnitus2 === "weekly"
-                  ? answers.tinnitus3 === "high"
-                    ? `<li>您目前有明顯的高頻耳鳴聲，可能會有高頻聽力損失的風險</li>`
-                    : answers.tinnitus3 === "low"
-                    ? `<li>您目前有明顯的低頻耳鳴聲，可能會有低頻聽力損失的風險</li>`
-                    : ""
-                  : ""
-              }
-              <li>
-                <a href="https://www.greattree.com.tw/stores/a2267fEF473Ecb7C" target="_blank">預約免費聽力檢查</a>
-              </li>
-            </ul>
-          `;
+              ${ (answers.tinnitus2 === "daily" || answers.tinnitus2 === "weekly")
+                  ? (answers.tinnitus3 === "high" ? `<li>您目前有明顯的高頻耳鳴聲，可能會有高頻聽力損失的風險</li>`
+                    : (answers.tinnitus3 === "low" ? `<li>您目前有明顯的低頻耳鳴聲，可能會有低頻聽力損失的風險</li>` : ""))
+                  : "" }
+              <li><a href="https://www.greattree.com.tw/stores/a2267fEF473Ecb7C" target="_blank">預約免費聽力檢查</a></li>
+            </ul>`;
         }
 
-        // 睡眠結論（修正邏輯）
+        // 睡眠結論
         let sleepResult = "";
         if (sleepNotEnough) {
           sleepResult = `
             <ul class="bullet-list">
-              <li>你的睡眠時數低於
-                <a href="https://www.facebook.com/InterviewMap/posts/%E7%BE%8E%E5%9C%8B%E7%9D%A1%E7%9C%A0%E9%86%AB%E5%AD%B8%E6%9C%83aasm%E5%BB%BA%E8%AD%B0%E6%AF%8F%E5%80%8B%E5%B9%B4%E9%BD%A1%E5%B1%A4%E7%9A%84%E5%81%A5%E5%BA%B7%E7%9D%A1%E7%9C%A0%E6%99%82%E9%96%93/2871842113070905/?locale=zh_TW" target="_blank">美國睡眠醫學會</a>建議
-              </li>
+              <li>你的睡眠時數低於<a href="https://www.facebook.com/InterviewMap/posts/2871842113070905/?locale=zh_TW" target="_blank">美國睡眠醫學會</a>建議</li>
               <li>建議改善睡眠品質，必要時請諮詢專業醫師。</li>
-              <li>
-                亦可參考
-                <a href="https://shop.greattree.com.tw/productlist?item1=02&item2=0297&item3=029714" target="_blank">睡眠保健食品</a>以提升睡眠品質(服用前請詢問專業藥師)
-              </li>
-            </ul>
-          `;
+              <li>亦可參考<a href="https://shop.greattree.com.tw/productlist?item1=02&item2=0297&item3=029714" target="_blank">睡眠保健食品</a>以提升睡眠品質(服用前請詢問專業藥師)</li>
+            </ul>`;
         } else if (hasSleepProblem) {
           sleepResult = `
             <ul class="bullet-list">
               <li>你雖然睡眠時數足夠，但有睡眠困擾（如多夢、難以入睡等），可能影響睡眠品質</li>
-              <li>建議尋求醫生協助，或服用
-                <a href="https://shop.greattree.com.tw/productlist?item1=02&item2=0297&item3=029714" target="_blank">睡眠保健食品</a>以提升睡眠品質(服用前請詢問專業藥師)
-              </li>
-            </ul>
-          `;
+              <li>建議尋求醫生協助，或服用<a href="https://shop.greattree.com.tw/productlist?item1=02&item2=0297&item3=029714" target="_blank">睡眠保健食品</a>以提升睡眠品質(服用前請詢問專業藥師)</li>
+            </ul>`;
         } else {
           sleepResult = `
             <ul class="bullet-list">
               <li>您目前睡眠狀況良好，祝福您有美好的睡眠以及良好的生活品質！</li>
-            </ul>
-          `;
+            </ul>`;
         }
 
         // 眩暈結論
@@ -497,28 +405,21 @@
           dizzyResult = `
             <ul class="bullet-list">
               <li>根據衛生署的統計，「跌倒」是65歲以上老年人事故傷害死亡的第二大原因。跌倒可能導致髖部骨折、頭部外傷、硬腦膜下出血、軟組織損傷。因此，預防跌倒對於老年人來說至關重要。</li>
-              <li>眩暈是指有天旋地轉或搖晃感，是身體平衡系統失調的表現。 主要成因有:內耳問題、中樞神經系統病變、或全身性疾病等；建議就醫請醫師評估是否有需進一步治療。</li>
-              <li>亦可在醫師的評估下進行
-                <a href="https://www.uho.com.tw/article-61248.html" target="_blank">前庭復健</a>
-              </li>
-            </ul>
-          `;
+              <li>眩暈是指有天旋地轉或搖晃感，是身體平衡系統失調的表現。主要成因有內耳問題、中樞神經系統病變、或全身性疾病等；建議就醫請醫師評估是否需進一步治療。</li>
+              <li>亦可在醫師評估下進行<a href="https://www.uho.com.tw/article-61248.html" target="_blank">前庭復健</a></li>
+            </ul>`;
         } else {
           dizzyResult = `
             <ul class="bullet-list">
               <li>沒有明顯眩暈問題，請持續注意身體狀況</li>
-            </ul>
-          `;
+            </ul>`;
         }
 
-        // 結果頁
         content.innerHTML = `
           <h2 style="text-align:center;">${user.name} 的測驗結果</h2>
           <div class="result-grid">
             <div class="result-item" style="display:flex;flex-direction:column;align-items:center;justify-content:flex-start;">
-              <div class="result-img">
-                ${charImg}
-              </div>
+              <div class="result-img">${charImg}</div>
               <div class="result-img-label result-section-title" style="margin-top:12px;">你的健康小夥伴</div>
             </div>
             <div class="result-item">
@@ -528,9 +429,7 @@
             <div class="result-item">
               <div class="result-section-title">睡眠<span class="emoji">💤</span></div>
               ${sleepResult}
-              <div style="color:#4D96FF;font-weight:bold;margin-top:6px;">
-                你的年齡建議每天睡眠時數：${sleepNorm} 小時
-              </div>
+              <div style="color:#4D96FF;font-weight:bold;margin-top:6px;">你的年齡建議每天睡眠時數：${sleepNorm} 小時</div>
             </div>
             <div class="result-item">
               <div class="result-section-title">眩暈<span class="emoji">🌀</span></div>
@@ -550,13 +449,16 @@
 
     // 開始測驗
     function startQuiz() {
-      const name = document.getElementById("name").value;
-      const age = document.getElementById("age").value;
-      if (!name || !age) {
+      const nameEl = document.getElementById("start_name");
+      const ageEl = document.getElementById("start_age");
+      const nameVal = nameEl ? nameEl.value.trim() : "";
+      const ageVal = ageEl ? ageEl.value.trim() : "";
+
+      if (!nameVal || !ageVal) {
         alert("請輸入姓名與年齡");
         return;
       }
-      user = { name, age };
+      user = { name: nameVal, age: ageVal };
       currentStep = 1;
       render();
     }
@@ -566,26 +468,20 @@
       answers[q.id] = value;
 
       // 清除其他選項
-      document.querySelectorAll(`.option[id^="opt_${step}_"]`).forEach((el) => {
-        el.classList.remove("selected");
-      });
+      document.querySelectorAll(`.option[id^="opt_${step}_"]`).forEach((el) => el.classList.remove("selected"));
 
       // 新增選擇的選項
       const selectedOption = document.getElementById(`opt_${step}_${value}`);
-      if (selectedOption) {
-        selectedOption.classList.add("selected");
-      }
+      if (selectedOption) selectedOption.classList.add("selected");
 
       // 啟用下一步按鈕
       const nextBtn = document.getElementById("nextBtn");
-      if (nextBtn) {
-        nextBtn.disabled = false;
-      }
+      if (nextBtn) nextBtn.disabled = false;
 
       // 如果耳鳴選項是 'no'，跳過中間步驟
       if (q.id === "tinnitus1" && value === "no") {
         currentStep = 4; // 跳過耳鳴2,3
-        setTimeout(render, 300);
+        setTimeout(render, 0);
       }
     }
 
@@ -594,63 +490,43 @@
       const q = questions[step];
       if (!answers[q.id]) answers[q.id] = [];
 
-      // 互斥邏輯
       if (value === "none") {
-        // 選「以上都沒有」時，清空其他選項，只留 none
-        answers[q.id] = ["none"];
-        // 移除其他選項的選中樣式
+        answers[q.id] = ["none"]; // 清空其他選項，只留 none
         q.options.forEach((opt) => {
           const el = document.getElementById(`opt_${step}_${opt.value}`);
           if (el) el.classList.remove("selected");
         });
-        document.getElementById(`opt_${step}_none`).classList.add("selected");
+        const noneEl = document.getElementById(`opt_${step}_none`);
+        if (noneEl) noneEl.classList.add("selected");
       } else {
-        // 選其他選項時，移除 none
         answers[q.id] = answers[q.id].filter((v) => v !== "none");
         const idx = answers[q.id].indexOf(value);
-        if (idx === -1) {
-          answers[q.id].push(value);
-        } else {
-          answers[q.id].splice(idx, 1);
-        }
-        // 取消 none 的選中樣式
+        if (idx === -1) answers[q.id].push(value); else answers[q.id].splice(idx, 1);
         const noneEl = document.getElementById(`opt_${step}_none`);
         if (noneEl) noneEl.classList.remove("selected");
       }
 
-      // 更新選中樣式
       q.options.forEach((opt) => {
         const el = document.getElementById(`opt_${step}_${opt.value}`);
         if (el) {
-          if (answers[q.id].includes(opt.value)) {
-            el.classList.add("selected");
-          } else {
-            el.classList.remove("selected");
-          }
+          if (answers[q.id].includes(opt.value)) el.classList.add("selected");
+          else el.classList.remove("selected");
         }
       });
 
-      // 啟用下一步按鈕
       const nextBtn = document.getElementById("nextBtn");
-      if (nextBtn) {
-        nextBtn.disabled = !answers[q.id] || answers[q.id].length === 0;
-      }
+      if (nextBtn) nextBtn.disabled = !answers[q.id] || answers[q.id].length === 0;
     }
 
-    function updateSlider(step) {
+    // 下拉選單改變
+    function updateSelect(step) {
       const q = questions[step];
-      const sliderEl = document.getElementById(`slider_${step}`);
-      const sliderValueEl = document.getElementById(`slider_value_${step}`);
-      if (!sliderEl || !sliderValueEl) return;
-
-      const value = sliderEl.value;
+      const selectEl = document.getElementById(`select_${step}`);
+      if (!selectEl) return;
+      const value = selectEl.value;
       answers[q.id] = value;
-      sliderValueEl.textContent = value + " 小時";
-
       const nextBtn = document.getElementById("nextBtn");
-      if (nextBtn) {
-        nextBtn.disabled = false;
-      }
+      if (nextBtn) nextBtn.disabled = false;
     }
 
     // 上一題
@@ -664,10 +540,7 @@
     // 下一題
     function nextStep() {
       const q = questions[currentStep];
-      if (
-        !answers[q.id] ||
-        (Array.isArray(answers[q.id]) && answers[q.id].length === 0)
-      ) {
+      if (!answers[q.id] || (Array.isArray(answers[q.id]) && answers[q.id].length === 0)) {
         alert("請選擇答案");
         return;
       }
